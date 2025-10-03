@@ -1,81 +1,47 @@
-# distributions.py
-"""
-Distributions Module
---------------------
-This script demonstrates Binomial and Normal distributions
-using NumPy, SciPy, and Matplotlib.
+# binomial_and_normal_app.py
 
-You can use it for learning, teaching, or visualization purposes.
-"""
-
+import streamlit as st
+import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import binom, norm
 
+st.title("📊 Binomial and Normal Distribution Explorer")
 
-def plot_binomial_distribution(n=10, p=0.5):
-    """
-    Plot a Binomial distribution PMF and CDF.
+# Sidebar for parameters
+st.sidebar.header("Distribution Parameters")
 
-    Parameters:
-        n (int): number of trials
-        p (float): probability of success
-    """
+# Distribution selection
+dist_type = st.sidebar.radio("Choose Distribution", ["Binomial", "Normal"])
+
+# Binomial Distribution
+if dist_type == "Binomial":
+    n = st.sidebar.slider("Number of Trials (n)", min_value=1, max_value=100, value=10)
+    p = st.sidebar.slider("Probability of Success (p)", min_value=0.0, max_value=1.0, value=0.5)
+
+    # Generate data
     x = np.arange(0, n+1)
-    pmf = binom.pmf(x, n, p)
-    cdf = binom.cdf(x, n, p)
+    pmf = [pd.Series(np.random.binomial(n, p, 10000)).value_counts(normalize=True).get(i, 0) for i in x]
 
-    # Plot PMF
-    plt.figure(figsize=(10, 4))
-    plt.subplot(1, 2, 1)
-    plt.stem(x, pmf, basefmt=" ")
-    plt.title(f"Binomial PMF (n={n}, p={p})")
-    plt.xlabel("Number of Successes")
-    plt.ylabel("Probability")
+    # Create dataframe
+    df = pd.DataFrame({"Successes": x, "PMF": pmf})
 
-    # Plot CDF
-    plt.subplot(1, 2, 2)
-    plt.step(x, cdf, where="post")
-    plt.title(f"Binomial CDF (n={n}, p={p})")
-    plt.xlabel("Number of Successes")
-    plt.ylabel("Cumulative Probability")
+    st.subheader(f"Binomial Distribution (n={n}, p={p})")
+    st.bar_chart(df.set_index("Successes"))
 
-    plt.tight_layout()
-    plt.show()
+    st.write("📌 This chart shows the probability distribution of successes in a binomial experiment.")
 
+# Normal Distribution
+elif dist_type == "Normal":
+    mu = st.sidebar.slider("Mean (μ)", min_value=-10, max_value=10, value=0)
+    sigma = st.sidebar.slider("Standard Deviation (σ)", min_value=1, max_value=10, value=2)
 
-def plot_normal_distribution(mu=0, sigma=1):
-    """
-    Plot a Normal distribution PDF and CDF.
+    # Generate data
+    x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
+    pdf = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
 
-    Parameters:
-        mu (float): mean
-        sigma (float): standard deviation
-    """
-    x = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)
-    pdf = norm.pdf(x, mu, sigma)
-    cdf = norm.cdf(x, mu, sigma)
+    # Create dataframe
+    df = pd.DataFrame({"x": x, "PDF": pdf})
 
-    # Plot PDF
-    plt.figure(figsize=(10, 4))
-    plt.subplot(1, 2, 1)
-    plt.plot(x, pdf, label="PDF")
-    plt.title(f"Normal PDF (μ={mu}, σ={sigma})")
-    plt.xlabel("x")
-    plt.ylabel("Density")
+    st.subheader(f"Normal Distribution (μ={mu}, σ={sigma})")
+    st.line_chart(df.set_index("x"))
 
-    # Plot CDF
-    plt.subplot(1, 2, 2)
-    plt.plot(x, cdf, label="CDF", color="orange")
-    plt.title(f"Normal CDF (μ={mu}, σ={sigma})")
-    plt.xlabel("x")
-    plt.ylabel("Cumulative Probability")
-
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == "__main__":
-    # Example Usage
-    plot_binomial_distribution(n=10, p=0.5)
-    plot_normal_distribution(mu=0, sigma=1)
+    st.write("📌 This chart shows the bell curve of a normal distribution.")
