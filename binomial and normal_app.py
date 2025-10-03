@@ -1,47 +1,50 @@
-# binomial_and_normal_app.py
+# probability_app.py
 
 import streamlit as st
 import pandas as pd
 import numpy as np
+import math
 
-st.title("📊 Binomial and Normal Distribution Explorer")
+st.title("📊 Binomial & Normal Probability Calculator")
 
-# Sidebar for parameters
-st.sidebar.header("Distribution Parameters")
+# Choose distribution
+dist_type = st.radio("Choose Distribution", ["Binomial", "Normal"])
 
-# Distribution selection
-dist_type = st.sidebar.radio("Choose Distribution", ["Binomial", "Normal"])
-
-# Binomial Distribution
+# -----------------------------
+# BINOMIAL DISTRIBUTION
+# -----------------------------
 if dist_type == "Binomial":
-    n = st.sidebar.slider("Number of Trials (n)", min_value=1, max_value=100, value=10)
-    p = st.sidebar.slider("Probability of Success (p)", min_value=0.0, max_value=1.0, value=0.5)
+    st.header("🎲 Binomial Distribution")
 
-    # Generate data
-    x = np.arange(0, n+1)
-    pmf = [pd.Series(np.random.binomial(n, p, 10000)).value_counts(normalize=True).get(i, 0) for i in x]
+    # User input
+    n = st.number_input("Enter number of trials (n)", min_value=1, value=10)
+    p = st.number_input("Enter probability of success (p)", min_value=0.0, max_value=1.0, value=0.5)
+    k = st.number_input("Enter number of successes (k)", min_value=0, value=5)
 
-    # Create dataframe
-    df = pd.DataFrame({"Successes": x, "PMF": pmf})
+    # Binomial PMF calculation
+    def binomial_pmf(n, k, p):
+        comb = math.comb(n, k)  # nCk
+        return comb * (p ** k) * ((1 - p) ** (n - k))
 
-    st.subheader(f"Binomial Distribution (n={n}, p={p})")
-    st.bar_chart(df.set_index("Successes"))
+    probability = binomial_pmf(n, k, p)
 
-    st.write("📌 This chart shows the probability distribution of successes in a binomial experiment.")
+    st.success(f"➡ Probability of getting exactly {k} successes in {n} trials = **{probability:.6f}**")
 
-# Normal Distribution
+# -----------------------------
+# NORMAL DISTRIBUTION
+# -----------------------------
 elif dist_type == "Normal":
-    mu = st.sidebar.slider("Mean (μ)", min_value=-10, max_value=10, value=0)
-    sigma = st.sidebar.slider("Standard Deviation (σ)", min_value=1, max_value=10, value=2)
+    st.header("📈 Normal Distribution")
 
-    # Generate data
-    x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
-    pdf = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+    # User input
+    mu = st.number_input("Enter mean (μ)", value=0.0)
+    sigma = st.number_input("Enter standard deviation (σ)", min_value=0.1, value=1.0)
+    x = st.number_input("Enter value of x", value=0.0)
 
-    # Create dataframe
-    df = pd.DataFrame({"x": x, "PDF": pdf})
+    # Normal PDF calculation
+    def normal_pdf(x, mu, sigma):
+        return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
 
-    st.subheader(f"Normal Distribution (μ={mu}, σ={sigma})")
-    st.line_chart(df.set_index("x"))
+    density = normal_pdf(x, mu, sigma)
 
-    st.write("📌 This chart shows the bell curve of a normal distribution.")
+    st.success(f"➡ Probability density at x = {x} (μ={mu}, σ={sigma}) = **{density:.6f}**")
